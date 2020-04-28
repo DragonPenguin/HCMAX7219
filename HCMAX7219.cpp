@@ -1,6 +1,6 @@
 /* FILE:    HCMAX7219.cpp
-   DATE:    12/04/16
-   VERSION: 0.3
+   DATE:    02/11/17
+   VERSION: 0.4
    AUTHOR:  Andrew Davies
 
 11/03/15 version 0.1: Original version
@@ -11,6 +11,11 @@
 					  
 12/04/16 version 0.3: Moved SPI library initialisation to Init() function to
 					  make library compatibly with the Due.
+
+02/11/17 version 0.4: Made the Refresh() function more efficient. 
+                      Corrected definitions for the print7Seg() & printMatrix()
+                      which were casing a coplie error on Linux version of Arduino
+                      IDE.
 
 Library for Maxim MAX7219 LED driver IC.
 
@@ -50,7 +55,7 @@ HCMAX7219::HCMAX7219(byte LOAD)
 
 /* Loads a text string into the output buffer using the seven segment 
    character set */
-void HCMAX7219::print7Seg(char TextString[], unsigned int Offset)
+void HCMAX7219::print7Seg(const char* TextString, unsigned int Offset)
 {
   unsigned int _StringLength;
   unsigned int bufferindex;
@@ -224,7 +229,7 @@ void HCMAX7219::print7Seg(long number, byte decimalPlace, unsigned int Offset)
 /* Loads a text string into the output buffer using the seven segment 
    character set */
 #ifdef DOTMATRIX
-void HCMAX7219::printMatrix(char TextString[], unsigned int Offset)
+void HCMAX7219::printMatrix(const char* TextString, unsigned int Offset)
 {
   unsigned int bufferindex;
   unsigned int charindex;
@@ -373,7 +378,7 @@ void HCMAX7219::printMatrix(long number, byte decimalPlace, unsigned int Offset)
   {
     Digits[index] = '.';
     index++;
-	Digits[index] = '0';
+	  Digits[index] = '0';
     index++;
   }
    
@@ -456,7 +461,7 @@ void HCMAX7219::Init(void)
     TestMode(TESTMODEOFF, DriverIndex);
     Shutdown(MAX7219ON, DriverIndex);
     Clear();
-	Refresh();
+	  Refresh();
   }
 }
 
@@ -467,7 +472,7 @@ void HCMAX7219::Clear(void)
   
   for (BufferIndex = 0; BufferIndex < DISPLAYBUFFERSIZE; BufferIndex++)
   {
-	DisplayBuffer[BufferIndex] = 0;
+	 DisplayBuffer[BufferIndex] = 0;
   }
 }
 
@@ -479,17 +484,16 @@ void HCMAX7219::Write(byte Address, byte Data, byte Driver)
   byte DriverIndex;
 
   digitalWrite(_LOAD, LOW);
-
   for (DriverIndex = 0; DriverIndex < NUMBEROFDRIVERS; DriverIndex++)
   {
     if(DriverIndex == Driver)
     {
-	  SPI.transfer(Address); 
-	  SPI.transfer(Data);
+	   SPI.transfer(Address); 
+	   SPI.transfer(Data);
     }else
     {
-	  SPI.transfer(MAX7219NOOP); 
-	  SPI.transfer(0); 
+	   SPI.transfer(MAX7219NOOP); 
+	   SPI.transfer(0); 
     } 
   }
   digitalWrite(_LOAD, HIGH);
@@ -532,9 +536,7 @@ void HCMAX7219::SevenSegDigits(byte Digits, byte Driver)
   Write(MAX7219SCANLIMIT, Digits, Driver);
 }
 
-/* Set the intensity of the LED's. 
-   Valid values for Level are 0 (min) to 0x0F (max)
-   Driver is the driver number in the chain */
+/* Set the intensity of the LED's. */
 void HCMAX7219::Intensity(byte Level, byte Driver)
 {
   Write(MAX7219INTESITY, Level, Driver);
@@ -549,15 +551,19 @@ void HCMAX7219::Refresh(void)
   Digit = 0;
   DriverIndex = 0;
 
+
   /* Write to each of the 8 digit registers in each driver */ 
-  while(DriverIndex < DISPLAYBUFFERSIZE)
+  while(Digit < 8)
   {
-    Write(Digit + MAX7219DIGIT1, DisplayBuffer[Digit + (DriverIndex * 8)], DriverIndex);
-    Digit++;
-    if (Digit == 8)
+    digitalWrite(_LOAD, LOW);
+    for (DriverIndex = 0; DriverIndex < NUMBEROFDRIVERS; DriverIndex++)
     {
-      Digit = 0;
-      DriverIndex++;   
+      SPI.transfer(Digit + MAX7219DIGIT1); 
+      SPI.transfer(DisplayBuffer[Digit + (DriverIndex * 8)]);
     }
+    digitalWrite(_LOAD, HIGH);
+    digitalWrite(_LOAD, LOW);
+
+    Digit++;
   }
 }
