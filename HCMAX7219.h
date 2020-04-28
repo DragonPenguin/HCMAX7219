@@ -1,21 +1,24 @@
 /* FILE:    HCMAX7219.cpp
-   DATE:    02/11/17
-   VERSION: 0.4
+   DATE:    06/12/18
+   VERSION: 0.5
    AUTHOR:  Andrew Davies
 
 11/03/15 version 0.1: Original version
 
 19/03/15 version 0.2: Added support for serial dot matrix module HCOPTO0014
-            and made speed enhancements by using hardware SPI 
-            interface.
-            
+					  and made speed enhancements by using hardware SPI 
+					  interface.
+					  
 12/04/16 version 0.3: Moved SPI library initialisation to Init() function to
-            make library compatibly with the Due.
+					  make library compatibly with the Due.
 
 02/11/17 version 0.4: Made the Refresh() function more efficient. 
                       Corrected definitions for the print7Seg() & printMatrix()
-                      which were casing a coplie error on Linux version of Arduino
-                      IDE.			  
+                      which were casing a compile error on Linux version of Arduino
+                      IDE.
+					  
+06/12/18 version 0.5: Added a new print7Seg member function that allows more control
+					  over how a number is displayed.			  
    
 Library for Maxim MAX7219 LED driver IC.
 
@@ -39,7 +42,7 @@ REASON WHATSOEVER.
 /***************************** USER CONFIGURATION ****************************/
 
 /* CHANGE THIS VALUE IF YOU ARE DASY CHAINING MORE THAN ONE DRIVER */
-#define NUMBEROFDRIVERS 12
+#define NUMBEROFDRIVERS 1
 
 
 /* TO SAVE PROGRAM MEMORY COMMENT OUT ANY OF THE LINES BELOW FOR HARDWARE THAT'S
@@ -291,6 +294,7 @@ class HCMAX7219
 
 #ifdef SEVENSEGMENT
   void print7Seg(const char* TextString, unsigned int Offset);
+  void print7Seg(float Value, uint8_t DP, uint8_t Digits, unsigned int Offset);
   void print7Seg(long number, unsigned int Offset);
   void print7Seg(long number, byte decimalPlace, unsigned int Offset);
 #endif  

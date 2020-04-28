@@ -1,6 +1,6 @@
 /* FILE:    HCMAX7219.cpp
-   DATE:    02/11/17
-   VERSION: 0.4
+   DATE:    06/12/18
+   VERSION: 0.5
    AUTHOR:  Andrew Davies
 
 11/03/15 version 0.1: Original version
@@ -14,8 +14,11 @@
 
 02/11/17 version 0.4: Made the Refresh() function more efficient. 
                       Corrected definitions for the print7Seg() & printMatrix()
-                      which were casing a coplie error on Linux version of Arduino
+                      which were casing a compile error on Linux version of Arduino
                       IDE.
+					  
+06/12/18 version 0.5: Added a new print7Seg member function that allows more control
+					  over how a number is displayed.
 
 Library for Maxim MAX7219 LED driver IC.
 
@@ -85,6 +88,71 @@ void HCMAX7219::print7Seg(const char* TextString, unsigned int Offset)
      charindex++;
   } 
 }
+
+
+
+/* Prints a floating point number to the display starting at the current cursor coordinate where:
+   Value is the number to print. 
+	   
+   DP specifies the number of decimal places to display the floating point number to.
+
+   Digits is the total number of digits to display. If the number is smaller than the specified number of digits it will pad 
+   the left side of the number with spaces.
+   
+   Offset is the column position from where the value will start from. Valid values are from 0 to 65535 (Uno/Nano etc) where:
+	   1 = right most column
+	   8 = left most column
+	   
+	   Values above 8 will start the text at a column beyond the left most column.*/
+	   
+void HCMAX7219::print7Seg(float Value, uint8_t DP, uint8_t Digits, unsigned int Offset)
+{
+	char TextString[15];
+	unsigned int bufferindex;
+	byte charindex;
+	
+	/*If number has a decimal place we need to add one to the total number of digital as on a 
+	  seven segment display the decimal point is combined with one of the digits. */
+	if(Value - (int)Value != 0)
+		Digits++;
+	
+	
+	dtostrf(Value, Digits, DP, TextString);
+	
+	
+	/* Set output buffer pointer */
+	if(Offset < DISPLAYBUFFERSIZE)
+	{
+		bufferindex = Offset;
+	}else
+	{
+		bufferindex = DISPLAYBUFFERSIZE;
+	}
+  
+	/* If text runs beyond the output buffer then crop it */
+	charindex = 0;
+	if (Offset > DISPLAYBUFFERSIZE)
+		charindex = Offset - (DISPLAYBUFFERSIZE);
+
+
+	/* Copy text into output buffer */
+	while(bufferindex != 0 && charindex != Digits)
+	{
+		bufferindex--;
+	 
+		if(TextString[charindex] == '.')
+		{
+			bufferindex++;
+			DisplayBuffer[bufferindex] = SevenSegChar[TextString[charindex - 1]-32] |  SevenSegChar[14];
+		}else
+		{
+			DisplayBuffer[bufferindex] = SevenSegChar[TextString[charindex] - 32];
+		}
+	 
+		charindex++;
+  } 
+}
+
 
 /* Loads an integer into the output buffer using the seven segment 
    character set */
