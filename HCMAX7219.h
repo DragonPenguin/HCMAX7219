@@ -1,6 +1,6 @@
 /* FILE:    HCMAX7219.cpp
-   DATE:    19/03/15
-   VERSION: 0.2
+   DATE:    12/04/16
+   VERSION: 0.3
    AUTHOR:  Andrew Davies
 
 11/03/15 version 0.1: Original version
@@ -8,7 +8,9 @@
 19/03/15 version 0.2: Added support for serial dot matrix module HCOPTO0014
 					  and made speed enhancements by using hardware SPI 
 					  interface.
-   
+
+12/04/16 version 0.3: Moved SPI library initialisation to Init() function to
+					  make library compatibly with the Due.					  
    
 Library for Maxim MAX7219 LED driver IC.
 
@@ -273,6 +275,7 @@ class HCMAX7219
 {
   public:
   HCMAX7219(byte LOAD);
+  void Init(void);
   void Write(byte Address, byte Data, byte Driver);
   void Shutdown(boolean Mode, byte Driver);
   void TestMode(boolean Mode, byte Driver);
@@ -300,7 +303,6 @@ class HCMAX7219
   byte DisplayBuffer[DISPLAYBUFFERSIZE];
   
   private:
-  void Init(void);
   int CalCharIndex(int Offset); 
   byte _LOAD;
   byte _InvertState;

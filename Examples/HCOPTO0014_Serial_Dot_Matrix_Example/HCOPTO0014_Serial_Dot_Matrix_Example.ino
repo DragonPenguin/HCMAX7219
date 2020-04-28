@@ -51,7 +51,8 @@ HCMAX7219 HCMAX7219(LOAD);
 
 
 void setup() 
-{       
+{
+  HCMAX7219.Init();
 }
 
 

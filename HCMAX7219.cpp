@@ -1,6 +1,6 @@
 /* FILE:    HCMAX7219.cpp
-   DATE:    19/03/15
-   VERSION: 0.2
+   DATE:    12/04/16
+   VERSION: 0.3
    AUTHOR:  Andrew Davies
 
 11/03/15 version 0.1: Original version
@@ -8,6 +8,9 @@
 19/03/15 version 0.2: Added support for serial dot matrix module HCOPTO0014
 					  and made speed enhancements by using hardware SPI 
 					  interface.
+					  
+12/04/16 version 0.3: Moved SPI library initialisation to Init() function to
+					  make library compatibly with the Due.
 
 Library for Maxim MAX7219 LED driver IC.
 
@@ -30,18 +33,14 @@ REASON WHATSOEVER.
 
 /* Constructor to initialise the GPIO and library */
 HCMAX7219::HCMAX7219(byte LOAD)
-{
-  /* Enable the hardware SPI interface */
-  SPI.begin();
-  SPI.setBitOrder(MSBFIRST);
-  
+{  
 /* Set DIO pins for interfacing to the driver as outputs */
   _LOAD = LOAD;
   pinMode(LOAD, OUTPUT); 
   digitalWrite(LOAD, HIGH);
   
   /* Initialise the driver(s) */
-  Init();
+  //Init();
   
   /* Turn text invert off */
   _InvertState = INVERTOFF;
@@ -444,6 +443,10 @@ void HCMAX7219::Invert(byte InvertState)
 void HCMAX7219::Init(void)
 {
   byte DriverIndex;
+  
+  /* Enable the hardware SPI interface */
+  SPI.begin();
+  SPI.setBitOrder(MSBFIRST);
   
   for (DriverIndex = 0; DriverIndex < NUMBEROFDRIVERS; DriverIndex++)
   {
